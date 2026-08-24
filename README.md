@@ -114,39 +114,61 @@ Normalize our dataset.
 
 8. Finally, call the functions confusion_matrix(), and the classification_report() in order to evaluate the performance of our classifier.
 
-<H3>Program:</H3> 
-```
+# Program
+
+```python
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn import preprocessing
+
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
+# Load dataset
 df = pd.read_csv("people_movie_interest_1.csv")
 
+# Display dataset
+print(df.head())
+print("Dataset Shape:", df.shape)
+
+# Handle missing values
+for column in df.columns:
+    if df[column].dtype == 'object':
+        df[column] = df[column].fillna(df[column].mode()[0])
+    else:
+        df[column] = df[column].fillna(df[column].median())
+
+# Define features and target
 X = df.drop("recommended_movie_genre", axis=1)
 y = df["recommended_movie_genre"]
 
+# Remove ID column
 X = X.drop("person_id", axis=1)
+
+# Encode categorical features
 X = pd.get_dummies(X, drop_first=True)
 X = X.astype(float)
 
-le = preprocessing.LabelEncoder()
+# Encode target
+le = LabelEncoder()
 y = le.fit_transform(y)
 
+# Split dataset
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.20, random_state=42
+    X, y,
+    test_size=0.20,
+    random_state=42,
+    stratify=y
 )
 
+# Scale features
 scaler = StandardScaler()
-scaler.fit(X_train)
-
-X_train = scaler.transform(X_train)
+X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
+# Create MLP model
 model = MLPClassifier(
     hidden_layer_sizes=(50, 50, 10),
     max_iter=1000,
@@ -157,18 +179,27 @@ model = MLPClassifier(
     momentum=0.9
 )
 
+# Train model
 model.fit(X_train, y_train)
 
-predictions = model.predict(X_test)
+# Prediction
+y_pred = model.predict(X_test)
 
-print(f"Accuracy: {accuracy_score(y_test, predictions):.4f}")
+# Accuracy
+print("Accuracy:", accuracy_score(y_test, y_pred))
 
+# Classification report
 print("\nClassification Report:")
-print(classification_report(y_test, predictions, target_names=le.classes_))
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=le.classes_
+))
 
-cm = confusion_matrix(y_test, predictions)
+# Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
 
-plt.figure(figsize=(10, 8))
+plt.figure(figsize=(10, 7))
 sns.heatmap(
     cm,
     annot=True,
@@ -178,19 +209,38 @@ sns.heatmap(
 )
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
-plt.title("Confusion Matrix")
+plt.title("MLP Confusion Matrix")
 plt.show()
 
+# Loss curve
 plt.figure(figsize=(8, 5))
 plt.plot(model.loss_curve_)
 plt.xlabel("Iterations")
 plt.ylabel("Loss")
-plt.title("MLP Training Loss")
+plt.title("MLP Training Loss Curve")
 plt.show()
 ```
-<H3>Output:</H3>
 
-Show your results here
+# Output
 
-<H3>Result:</H3>
-Thus, MLP is implemented for multi-classification using python.
+The following outputs are obtained after executing the program:
+
+### 1. Classification Accuracy
+
+<img width="537" height="165" alt="image" src="https://github.com/user-attachments/assets/1c302ec0-8a0e-40f3-bf8a-bed65cd55982" />
+
+
+### 2. Confusion Matrix
+
+<img width="1163" height="778" alt="image" src="https://github.com/user-attachments/assets/e19abb85-9ee0-4f04-996a-756813a516e5" />
+
+
+
+### 3. Training Loss Curve
+
+<img width="923" height="551" alt="image" src="https://github.com/user-attachments/assets/cabed930-ce46-4b97-be5c-ba5338ce1864" />
+
+
+# Result
+
+Thus, the **Multilayer Perceptron (MLP)** was successfully implemented for **multiclassification using Python**, and its performance was evaluated using accuracy, confusion matrix, classification report, and training loss curve.
