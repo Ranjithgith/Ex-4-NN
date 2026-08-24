@@ -115,9 +115,79 @@ Normalize our dataset.
 8. Finally, call the functions confusion_matrix(), and the classification_report() in order to evaluate the performance of our classifier.
 
 <H3>Program:</H3> 
+```
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
-Insert your code here
+df = pd.read_csv("people_movie_interest_1.csv")
 
+X = df.drop("recommended_movie_genre", axis=1)
+y = df["recommended_movie_genre"]
+
+X = X.drop("person_id", axis=1)
+X = pd.get_dummies(X, drop_first=True)
+X = X.astype(float)
+
+le = preprocessing.LabelEncoder()
+y = le.fit_transform(y)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42
+)
+
+scaler = StandardScaler()
+scaler.fit(X_train)
+
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
+
+model = MLPClassifier(
+    hidden_layer_sizes=(50, 50, 10),
+    max_iter=1000,
+    random_state=42,
+    activation='logistic',
+    solver='sgd',
+    learning_rate_init=0.01,
+    momentum=0.9
+)
+
+model.fit(X_train, y_train)
+
+predictions = model.predict(X_test)
+
+print(f"Accuracy: {accuracy_score(y_test, predictions):.4f}")
+
+print("\nClassification Report:")
+print(classification_report(y_test, predictions, target_names=le.classes_))
+
+cm = confusion_matrix(y_test, predictions)
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt='d',
+    xticklabels=le.classes_,
+    yticklabels=le.classes_
+)
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
+
+plt.figure(figsize=(8, 5))
+plt.plot(model.loss_curve_)
+plt.xlabel("Iterations")
+plt.ylabel("Loss")
+plt.title("MLP Training Loss")
+plt.show()
+```
 <H3>Output:</H3>
 
 Show your results here
